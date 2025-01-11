@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="de">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content = "width = device-width, initial-scale = 1.0, minimum-scale = 1, maximum-scale = 1, user-scalable = no" />
+  <meta name="apple-mobile-web-app-title" content="Colors" />
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>Sanfte Farbverläufe</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      overflow: hidden;
+      /* Verhindert Scrollen */
+    }
+
+    .gradient-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(45deg, #642626, #8e708b);
+      transition: opacity 6s ease;
+      /* Sanfter Übergang */
+    }
+
+    .gradient-layer.hidden {
+      opacity: 0;
+    }
+
+    .gradient-layer.visible {
+      opacity: 1;
+    }
+
+    #fullscreen-btn {
+      position: absolute;
+      top: 20px;
+      right: 20px;
+      padding: 10px 20px;
+      background-color: rgba(0, 0, 0, 0.3);
+      color: rgb(102, 102, 102);
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      z-index: 10;
+    }
+
+    #fullscreen-btn:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Zwei überlagerte Ebenen für den Gradienten -->
+  <div class="gradient-layer visible" id="layer1"></div>
+  <div class="gradient-layer hidden" id="layer2"></div>
+
+  <!-- Fullscreen-Button -->
+  <button id="fullscreen-btn">Fullscreen</button>
+
+  <script>
+    let currentLayer = 1; // Aktuelle aktive Ebene
+    let minHelligkeit = 10; // Helligkeit in Prozent
+    let maxHelligkeit = 65; // Helligkeit in Prozent
+    let delay = 6; // Verzögerung zwischen Farbwechseln in Sekunden
+    let sättigung = 100; // Sättigung in Prozent
+    let startWinkel = 0; // Anfangswinkel des Farbkreises
+    let endWinkel = 360; // Endwinkel des Farbkreises
+    let colorMinDist = 80;
+
+    // Funktion, um eine zufällige, gesättigte Farbe aus dem gewünschten Winkelbereich zu erzeugen
+    function randomColor() {
+      const hue = randomCyclicHue(); // Zufälligen Farbton im zyklischen Bereich erhalten
+      console.log(`Random Color: hsl(${hue}, ${sättigung}%, ${helligkeit}%)`); // Debugging
+      return `hsl(${hue}, ${sättigung}%, ${helligkeit}%)`; // HSL mit angegebener Sättigung und Helligkeit
+    }
+
+    let lastHue = null; // Letzter Farbton, um den Abstand zu berechnen
+
+    // Funktion, um den Farbton (Hue) zyklisch im Bereich [180°, 360°] und [0°, 60°] zu wählen
+    function randomCyclicHue() {
+      const range1 = 360 - startWinkel; // Länge des Bereichs von 180° bis 360°
+      const range2 = endWinkel; // Länge des Bereichs von 0° bis 60°
+      const totalRange = range1 + range2; // Gesamtbereich
+
+      let newHue;
+
+      do {
+        const randomPoint = Math.random() * totalRange; // Zufälliger Punkt im kombinierten Bereich
+
+        // Entscheiden, ob der Punkt im ersten oder zweiten Bereich liegt
+        if (randomPoint < range1) {
+          newHue = startWinkel + randomPoint; // Bereich [180°, 360°]
+        } else {
+          newHue = randomPoint - range1; // Bereich [0°, 60°]
+        }
+
+        // Prüfen, ob der Abstand mindestens 45 Grad beträgt
+      } while (lastHue !== null && Math.abs(newHue - lastHue) < colorMinDist);
+
+      lastHue = newHue; // Aktuellen Farbton speichern
+      return newHue;
+    }
+
+    // Funktion, um einen harmonischen Gradienten im gewünschten Winkelbereich zu erzeugen
+    function randomGradient() {
+      const baseHue = randomCyclicHue(); // Basis-Farbton
+      console.log('hue: ' + baseHue);
+      const variation = Math.floor(Math.random() * 110) + 40; // Zufällige Variation ±40
+      const secondHue = (baseHue + variation + 360) % 360; // Zweite Farbe bleibt im zyklischen Bereich
+      const randomBrightness = Math.floor(Math.random() * (maxHelligkeit - minHelligkeit + 1)) + minHelligkeit;
+      const color1 = `hsl(${baseHue}, ${sättigung}%, ${randomBrightness}%)`; // Basisfarbe
+      const color2 = `hsl(${secondHue}, ${sättigung}%, ${randomBrightness}%)`; // Ähnliche Farbe
+      const angle = Math.floor(Math.random() * 360); // Zufälliger Winkel
+      console.log(`Gradient: ${color1} -> ${color2} (Angle: ${angle}°)`); // Debugging
+      return `linear-gradient(${angle}deg, ${color1}, ${color2})`;
+    }
+
+    // Funktion, um den Gradienten mit sanftem Übergang zu wechseln
+    function changeBackground() {
+      const activeLayer = document.getElementById(`layer${currentLayer}`);
+      const nextLayer = document.getElementById(`layer${currentLayer === 1 ? 2 : 1}`);
+
+      // Setze den neuen Gradienten auf die nächste Ebene
+      nextLayer.style.background = randomGradient();
+
+      // Wechsel die Sichtbarkeit
+      activeLayer.classList.remove('visible');
+      activeLayer.classList.add('hidden');
+      nextLayer.classList.remove('hidden');
+      nextLayer.classList.add('visible');
+
+      // Aktualisiere die aktive Ebene
+      currentLayer = currentLayer === 1 ? 2 : 1;
+    }
+
+    // Fullscreen aktivieren/deaktivieren
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch((err) => {
+          console.error(`Error attempting to enable fullscreen mode: ${err.message}`);
+        });
+      } else {
+        document.exitFullscreen().catch((err) => {
+          console.error(`Error attempting to exit fullscreen mode: ${err.message}`);
+        });
+      }
+    }
+
+    // Event-Listener für den Fullscreen-Button
+    document.getElementById('fullscreen-btn').addEventListener('click', toggleFullscreen);
+
+    // Starte den Farbwechsel alle "delay" Sekunden
+    setInterval(changeBackground, delay * 1000);
+
+    // Initialer Start
+    changeBackground();
+
+  </script>
+</body>
+
+</html>
