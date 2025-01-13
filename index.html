@@ -115,7 +115,7 @@
     function randomGradient() {
       const baseHue = randomCyclicHue(); // Basis-Farbton
       console.log('hue: ' + baseHue);
-      const variation = Math.floor(Math.random() * 110) + 40; // Zufällige Variation ±40
+      const variation = Math.floor(Math.random() * 210) + 40; // Zufällige Variation ±40
       const secondHue = (baseHue + variation + 360) % 360; // Zweite Farbe bleibt im zyklischen Bereich
       const randomBrightness = Math.floor(Math.random() * (maxHelligkeit - minHelligkeit + 1)) + minHelligkeit;
       const color1 = `hsl(${baseHue}, ${sättigung}%, ${randomBrightness}%)`; // Basisfarbe
